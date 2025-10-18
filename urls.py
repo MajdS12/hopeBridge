@@ -11,7 +11,18 @@ from mongodb_only_views import about_view as mongo_about_view
 
 # Health check endpoint for Railway
 def health_check(request):
-    return JsonResponse({"status": "healthy", "message": "HopeBridge is running!"})
+    try:
+        # Simple health check that doesn't depend on database connections
+        return JsonResponse({
+            "status": "healthy", 
+            "message": "HopeBridge is running!",
+            "timestamp": "2025-10-18T15:00:00Z"
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error", 
+            "message": f"Health check failed: {str(e)}"
+        }, status=500)
 
 # ---- יבוא עקבי של כל ה-views שלנו ----
 from mongodb_only_views import (
