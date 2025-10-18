@@ -10,7 +10,17 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Never allow DEBUG=True in production
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,healthcheck.railway.app').split(',')
+# Get ALLOWED_HOSTS from environment or use defaults
+default_hosts = 'localhost,127.0.0.1,healthcheck.railway.app'
+env_hosts = os.environ.get('ALLOWED_HOSTS', default_hosts)
+ALLOWED_HOSTS = env_hosts.split(',')
+
+# Always ensure healthcheck.railway.app is included for Railway healthchecks
+if 'healthcheck.railway.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('healthcheck.railway.app')
+
+# Debug: Print ALLOWED_HOSTS for troubleshooting
+print(f"DEBUG: ALLOWED_HOSTS = {ALLOWED_HOSTS}")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
