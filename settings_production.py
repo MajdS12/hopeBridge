@@ -81,7 +81,13 @@ WSGI_APPLICATION = 'wsgi.application'
 
 # Database Configuration
 # Use PostgreSQL if available, otherwise fallback to SQLite for initial deployment
-if os.environ.get('DB_NAME'):
+if os.environ.get('DATABASE_URL'):
+    # Railway provides DATABASE_URL for PostgreSQL
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    }
+elif os.environ.get('DB_NAME'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
