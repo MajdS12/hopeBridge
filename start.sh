@@ -17,5 +17,6 @@ python manage.py migrate --settings=settings_production || echo "Migration faile
 python manage.py collectstatic --noinput --settings=settings_production || echo "Static collection failed, continuing..."
 
 # Start the application
+echo "PORT variable: $PORT"
 echo "Starting Gunicorn on port $PORT..."
 exec gunicorn --bind 0.0.0.0:$PORT --workers 3 --timeout 120 wsgi:application
