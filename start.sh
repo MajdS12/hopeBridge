@@ -7,6 +7,9 @@ source /opt/venv/bin/activate
 # Set environment variables
 export DJANGO_SETTINGS_MODULE=settings_production
 
+# Create logs directory
+mkdir -p /app/logs
+
 # Run database migrations (ignore errors for now)
 python manage.py migrate --settings=settings_production || echo "Migration failed, continuing..."
 
@@ -14,4 +17,4 @@ python manage.py migrate --settings=settings_production || echo "Migration faile
 python manage.py collectstatic --noinput --settings=settings_production || echo "Static collection failed, continuing..."
 
 # Start the application
-exec gunicorn --bind 0.0.0.0:$PORT --workers 3 --timeout 120 settings_production.wsgi:application
+exec gunicorn --bind 0.0.0.0:$PORT --workers 3 --timeout 120 wsgi:application
