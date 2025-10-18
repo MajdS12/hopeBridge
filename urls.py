@@ -5,8 +5,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.contrib.auth import views as auth_views
+from django.http import JsonResponse
 import views  # משתמשים ב-about וב-welcome הישן
 from mongodb_only_views import about_view as mongo_about_view
+
+# Health check endpoint for Railway
+def health_check(request):
+    return JsonResponse({"status": "healthy", "message": "HopeBridge is running!"})
 
 # ---- יבוא עקבי של כל ה-views שלנו ----
 from mongodb_only_views import (
@@ -49,6 +54,7 @@ from mongodb_admin import (
 # ---- אופציה A: להפנות /admin לדשבורד מנוהל שלנו ----
 urlpatterns = [
     path('admin/', lambda request: redirect('admin_dashboard')),
+    path('health/', health_check, name='health_check'),
 ]
 
 # ---- עמודים כלליים ----

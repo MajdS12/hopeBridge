@@ -5,7 +5,7 @@
   },
   "deploy": {
     "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 3 --timeout 120 settings_production.wsgi:application",
-    "healthcheckPath": "/",
+    "healthcheckPath": "/health/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
