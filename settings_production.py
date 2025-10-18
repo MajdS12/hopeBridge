@@ -107,10 +107,12 @@ else:
         }
     }
 
-# MongoDB Configuration
+# MongoDB Configuration (using Railway's default variable names)
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'donation_management_db')
-MONGODB_HOST = os.environ.get('MONGODB_HOST', 'localhost')
-MONGODB_PORT = int(os.environ.get('MONGODB_PORT', '27017'))
+MONGODB_HOST = os.environ.get('MONGOHOST', 'localhost')
+MONGODB_PORT = int(os.environ.get('MONGOPORT', '27017'))
+MONGODB_USER = os.environ.get('MONGOUSER', '')
+MONGODB_PASSWORD = os.environ.get('MONGOPASSWORD', '')
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

@@ -7,12 +7,21 @@ logger = logging.getLogger(__name__)
 def connect_to_mongodb():
     """Connect to MongoDB using settings from Django configuration"""
     try:
-        connect(
-            db=settings.MONGODB_DATABASE,
-            host=settings.MONGODB_HOST,
-            port=settings.MONGODB_PORT,
-            alias='default'
-        )
+        # Build connection parameters
+        connection_params = {
+            'db': settings.MONGODB_DATABASE,
+            'host': settings.MONGODB_HOST,
+            'port': settings.MONGODB_PORT,
+            'alias': 'default'
+        }
+        
+        # Add authentication if credentials are available
+        if hasattr(settings, 'MONGODB_USER') and settings.MONGODB_USER:
+            connection_params['username'] = settings.MONGODB_USER
+        if hasattr(settings, 'MONGODB_PASSWORD') and settings.MONGODB_PASSWORD:
+            connection_params['password'] = settings.MONGODB_PASSWORD
+            
+        connect(**connection_params)
         logger.info(f"Connected to MongoDB: {settings.MONGODB_DATABASE}")
         return True
     except Exception as e:
