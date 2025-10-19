@@ -19,5 +19,5 @@ python manage.py collectstatic --noinput --settings=settings_production || echo 
 # Start the application
 echo "PORT variable: $PORT"
 echo "Starting Gunicorn on port $PORT..."
-echo "Starting with 3 workers..."
-exec gunicorn --bind 0.0.0.0:$PORT --workers 3 --timeout 120 --log-level debug wsgi:application
+echo "Starting with 1 worker to test..."
+exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level debug wsgi:application
