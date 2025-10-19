@@ -6,7 +6,6 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.contrib.auth import views as auth_views
 from django.http import JsonResponse
-import views  # משתמשים ב-about וב-welcome הישן
 from mongodb_only_views import about_view as mongo_about_view
 
 # Health check endpoint for Railway

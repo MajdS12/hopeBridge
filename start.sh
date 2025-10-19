@@ -20,4 +20,10 @@ python manage.py collectstatic --noinput --settings=settings_production || echo 
 echo "PORT variable: $PORT"
 echo "Starting Gunicorn on port $PORT..."
 echo "Starting with 1 worker to test..."
+
+# Test Django import first
+echo "Testing Django import..."
+python -c "import django; print('Django import successful')" || echo "Django import failed"
+
+# Start Gunicorn
 exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level debug wsgi:application
