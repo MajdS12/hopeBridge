@@ -361,7 +361,7 @@ def mongo_login_view(request):
             if user.is_staff or user.is_superuser:
                 return redirect('admin_dashboard')
             else:
-                return redirect('dashboard')
+                return redirect('welcome')
         else:
             messages.error(request, 'Invalid email or password.')
             return redirect('login')
@@ -894,7 +894,7 @@ def mongo_item_create_view(request):
         donor = MongoDonor.objects(user_id=user.id).first()
         if not donor:
             messages.error(request, 'Donor profile not found.')
-            return redirect('dashboard')
+            return redirect('welcome')
 
         # Create item
         item = MongoItem(
@@ -1034,7 +1034,7 @@ def mongo_activity_create_view(request):
         volunteer = MongoVolunteer.objects(user_id=user.id).first()
         if not volunteer:
             messages.error(request, 'Volunteer profile not found.')
-            return redirect('dashboard')
+            return redirect('welcome')
 
         # Create activity
         activity = MongoActivity(
