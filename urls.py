@@ -56,7 +56,6 @@ from mongodb_admin import (
 urlpatterns = [
     path('admin/', lambda request: redirect('admin_dashboard')),
     path('health/', health_check, name='health_check'),
-    path('', lambda request: JsonResponse({"message": "HopeBridge API is running!", "status": "ok"})),
 ]
 
 # ---- עמודים כלליים ----
