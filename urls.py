@@ -13,9 +13,9 @@ def health_check(request):
     try:
         # Simple health check that doesn't depend on database connections
         return JsonResponse({
-            "status": "healthy", 
+            "status": "ok", 
             "message": "HopeBridge is running!",
-            "timestamp": "2025-10-18T15:00:00Z"
+            "timestamp": "2025-10-19T21:17:00Z"
         })
     except Exception as e:
         return JsonResponse({
@@ -65,6 +65,7 @@ from mongodb_admin import (
 urlpatterns = [
     path('admin/', lambda request: redirect('admin_dashboard')),
     path('health/', health_check, name='health_check'),
+    path('', lambda request: JsonResponse({"message": "HopeBridge API is running!", "status": "ok"})),
 ]
 
 # ---- עמודים כלליים ----
