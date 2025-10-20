@@ -10,14 +10,9 @@ from mongodb_only_views import about_view as mongo_about_view
 
 # Health check endpoint for Railway
 def health_check(request):
-    try:
-        # Railway expects a simple 200 OK response
-        return JsonResponse({"status": "ok"})
-    except Exception as e:
-        return JsonResponse({
-            "status": "error", 
-            "message": f"Health check failed: {str(e)}"
-        }, status=500)
+    from django.http import HttpResponse
+    # Railway expects a simple 200 OK response with plain text
+    return HttpResponse("OK", status=200)
 
 # ---- יבוא עקבי של כל ה-views שלנו ----
 from mongodb_only_views import (
