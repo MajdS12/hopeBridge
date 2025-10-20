@@ -14,6 +14,32 @@ def health_check(request):
     # Railway expects a simple 200 OK response with plain text
     return HttpResponse("OK", status=200)
 
+# Simple test view for root path
+def simple_welcome(request):
+    from django.http import HttpResponse
+    return HttpResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>HopeBridge - Welcome</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            h1 { color: #333; }
+            .btn { display: inline-block; padding: 10px 20px; margin: 10px; 
+                   background: #007bff; color: white; text-decoration: none; 
+                   border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to HopeBridge</h1>
+        <p>Connecting hearts, building hope</p>
+        <a href="/login/" class="btn">Sign In</a>
+        <a href="/register/" class="btn">Sign Up</a>
+        <a href="/about/" class="btn">About Us</a>
+    </body>
+    </html>
+    """)
+
 # ---- יבוא עקבי של כל ה-views שלנו ----
 from mongodb_only_views import (
     # Auth & Profile
@@ -77,7 +103,7 @@ urlpatterns += [
 
 # ---- Main & Auth ----
 urlpatterns += [
-    path('', TemplateView.as_view(template_name='welcome.html'), name='welcome'),
+    path('', simple_welcome, name='welcome'),
     path('login/',    mongo_login_view,    name='login'),
     path('logout/',   mongo_logout_view,   name='logout'),
     path('register/', mongo_register_view, name='register'),
