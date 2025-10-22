@@ -30,37 +30,39 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'users',
-    'donations',
-    # Temporarily disable allauth to test
+    # Temporarily disable all custom apps to test
+    # 'users',
+    # 'donations',
     # 'allauth',
     # 'allauth.account',
     # 'allauth.socialaccount',
     # 'allauth.socialaccount.providers.google',
 ]
 
-SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
+# Temporarily disable allauth settings
+# SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
+# ACCOUNT_EMAIL_VERIFICATION = "none"
+# ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
 
 # Prevent allauth redirect loops
-LOGIN_REDIRECT_URL = 'welcome'
-LOGOUT_REDIRECT_URL = 'welcome'
+# LOGIN_REDIRECT_URL = 'welcome'
+# LOGOUT_REDIRECT_URL = 'welcome'
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'openid',
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {'prompt': 'select_account'},
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
-            'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
-        }
-    }
-}
+# Temporarily disable allauth providers
+# SOCIALACCOUNT_PROVIDERS = {
+#     'google': {
+#         'SCOPE': [
+#             'openid',
+#             'profile',
+#             'email',
+#         ],
+#         'AUTH_PARAMS': {'prompt': 'select_account'},
+#         'APP': {
+#             'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
+#             'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
+#         }
+#     }
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,7 +77,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'urls_minimal'
 
 TEMPLATES = [
     {
