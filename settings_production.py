@@ -37,10 +37,10 @@ INSTALLED_APPS = [
 # 'allauth.account',
 # 'allauth.socialaccount',
 # 'allauth.socialaccount.providers.google',
+]
 
 # Use Django's default user model instead of custom one
 AUTH_USER_MODEL = 'auth.User'
-]
 
 # Temporarily disable allauth settings
 # SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
