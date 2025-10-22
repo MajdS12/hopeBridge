@@ -30,42 +30,45 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-# Temporarily disable all custom apps to test
-# 'users',
-# 'donations',
-# 'allauth',
-# 'allauth.account',
-# 'allauth.socialaccount',
-# 'allauth.socialaccount.providers.google',
+    
+    # Custom apps
+    'users',
+    'donations',
+    
+    # Allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
-# Use Django's default user model instead of custom one
-AUTH_USER_MODEL = 'auth.User'
+# Use custom user model
+AUTH_USER_MODEL = 'users.User'
 
-# Temporarily disable allauth settings
-# SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
-# ACCOUNT_EMAIL_VERIFICATION = "none"
-# ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
+# Allauth settings
+SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
 
 # Prevent allauth redirect loops
-# LOGIN_REDIRECT_URL = 'welcome'
-# LOGOUT_REDIRECT_URL = 'welcome'
+LOGIN_REDIRECT_URL = 'welcome'
+LOGOUT_REDIRECT_URL = 'welcome'
 
-# Temporarily disable allauth providers
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         'SCOPE': [
-#             'openid',
-#             'profile',
-#             'email',
-#         ],
-#         'AUTH_PARAMS': {'prompt': 'select_account'},
-#         'APP': {
-#             'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
-#             'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
-#         }
-#     }
-# }
+# Google OAuth provider
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'openid',
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {'prompt': 'select_account'},
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
+        }
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,7 +80,31 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'urls_minimal'
+# Security Settings
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Session Security
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+# CSRF Security
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+
+# Additional Security Headers
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
