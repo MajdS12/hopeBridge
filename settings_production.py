@@ -32,10 +32,11 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'users',
     'donations',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    # Temporarily disable allauth to test
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.google',
 ]
 
 SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
@@ -68,7 +69,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
+    # Temporarily disable allauth middleware to test
+    # 'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
