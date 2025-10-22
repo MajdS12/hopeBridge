@@ -30,13 +30,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    # Temporarily disable all custom apps to test
-    # 'users',
-    # 'donations',
-    # 'allauth',
-    # 'allauth.account',
-    # 'allauth.socialaccount',
-    # 'allauth.socialaccount.providers.google',
+# Temporarily disable all custom apps to test
+# 'users',
+# 'donations',
+# 'allauth',
+# 'allauth.account',
+# 'allauth.socialaccount',
+# 'allauth.socialaccount.providers.google',
+
+# Use Django's default user model instead of custom one
+AUTH_USER_MODEL = 'auth.User'
 ]
 
 # Temporarily disable allauth settings
