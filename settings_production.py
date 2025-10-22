@@ -82,7 +82,7 @@ MIDDLEWARE = [
 ]
 
 # Security Settings
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False  # Temporarily disable for testing
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -209,8 +209,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'welcome'
-LOGIN_REDIRECT_URL = 'profile_redirect'
-LOGOUT_REDIRECT_URL = 'welcome'
+# LOGIN_REDIRECT_URL and LOGOUT_REDIRECT_URL are already set above
 
 # Email Configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
