@@ -40,7 +40,11 @@ INSTALLED_APPS = [
 
 SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
 ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_SIGNUP_REDIRECT_URL = 'profile_redirect'
+ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
+
+# Prevent allauth redirect loops
+LOGIN_REDIRECT_URL = 'welcome'
+LOGOUT_REDIRECT_URL = 'welcome'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
