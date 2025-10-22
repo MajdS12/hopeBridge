@@ -35,40 +35,40 @@ INSTALLED_APPS = [
     'users',
     'donations',
     
-    # Allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    # Allauth - temporarily disabled for testing
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.google',
 ]
 
 # Use custom user model
 AUTH_USER_MODEL = 'users.User'
 
-# Allauth settings
-SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
+# Allauth settings - temporarily disabled for testing
+# SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
+# ACCOUNT_EMAIL_VERIFICATION = "none"
+# ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
 
 # Prevent allauth redirect loops
 LOGIN_REDIRECT_URL = 'welcome'
 LOGOUT_REDIRECT_URL = 'welcome'
 
-# Google OAuth provider
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'openid',
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {'prompt': 'select_account'},
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
-            'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
-        }
-    }
-}
+# Google OAuth provider - temporarily disabled
+# SOCIALACCOUNT_PROVIDERS = {
+#     'google': {
+#         'SCOPE': [
+#             'openid',
+#             'profile',
+#             'email',
+#         ],
+#         'AUTH_PARAMS': {'prompt': 'select_account'},
+#         'APP': {
+#             'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
+#             'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
+#         }
+#     }
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,7 +76,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
+    # 'allauth.account.middleware.AccountMiddleware',  # temporarily disabled
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

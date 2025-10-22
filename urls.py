@@ -70,9 +70,10 @@ urlpatterns += [
 ]
 
 # ---- allauth ----
-urlpatterns += [
-    path('accounts/', include('allauth.urls')),
-]
+# Temporarily disabled for testing
+# urlpatterns += [
+#     path('accounts/', include('allauth.urls')),
+# ]
 
 # ---- Onboarding + No-roles ----
 urlpatterns += [
