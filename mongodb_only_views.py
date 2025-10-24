@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.contrib.auth import get_user_model, login as dj_login
 from django.core.paginator import Paginator
 from datetime import datetime
-from mongo_utils import connect_to_mongodb, get_mongodb_connection
+from mongo_utils import connect_to_mongodb, get_mongodb_connection, ensure_mongodb_connection
 from mongo_models import User as MongoUser, Donor as MongoDonor, Recipient as MongoRecipient, \
     Volunteer as MongoVolunteer, Item as MongoItem, Donation as MongoDonation, \
     Activity as MongoActivity, VolunteerActivity as MongoVolunteerActivity, Address
@@ -61,7 +61,7 @@ class SimpleUserLike:
         self.last_name = last_name or ""
 
 def _get_session_user(request):
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
     user_email = request.session.get('mongo_user_email')
     if user_email:
         return MongoUser.objects(email=user_email).first()
@@ -69,7 +69,7 @@ def _get_session_user(request):
     # fallback: אם allauth חיבר אותנו כמשתמש Django – נסנכרן למונגו ולסשן
     dj_user = getattr(request, "user", None)
     if dj_user and getattr(dj_user, "is_authenticated", False):
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         email = (getattr(dj_user, "email", "") or "").lower()
         if not email:
@@ -206,7 +206,7 @@ def blocked_user_view(request):
     return render(request, 'registration/blocked_user.html')
 
 
-def ensure_mongo_connection():
+def ensure_mongodb_connection():
     """Ensure MongoDB connection is established"""
     if not get_mongodb_connection():
         connect_to_mongodb()
@@ -214,7 +214,7 @@ def ensure_mongo_connection():
 def mongo_auth_required(view_func):
     """Decorator to require MongoDB authentication and active user status"""
     def wrapper(request, *args, **kwargs):
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
         
         user_email = request.session.get('mongo_user_email')
         if not user_email:
@@ -242,7 +242,7 @@ class MongoUserMixin:
 
     def get_mongo_user(self, email):
         """Get MongoDB user by email"""
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
         try:
             return MongoUser.objects(email=email).first()
         except:
@@ -257,7 +257,7 @@ class MongoUserMixin:
 
     def create_mongo_user(self, email, password, name, phone, address_data):
         """Create new MongoDB user"""
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         # Create address object
         address = Address(
@@ -326,7 +326,7 @@ def mongo_login_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
         user = MongoUser.objects(email=email).first()
 
         if user and check_password(password, user.password_hash):
@@ -412,7 +412,7 @@ def mongo_register_view(request):
         is_recipient = request.POST.get('is_recipient') == 'on'
         is_volunteer = request.POST.get('is_volunteer') == 'on'
 
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         # Check if user already exists
         if MongoUser.objects(email=email).first():
@@ -559,7 +559,7 @@ def mongo_resend_code_view(request):
 
 def mongo_dashboard_view(request):
     """MongoDB-based dashboard view"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -782,7 +782,7 @@ def mongo_dashboard_view(request):
 
 def mongo_item_list_view(request):
     """MongoDB-based item list view - shows donations with items"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # Get filter parameters
     category = request.GET.get('category', '')
@@ -891,7 +891,7 @@ def mongo_item_list_view(request):
 def mongo_item_create_view(request):
     """MongoDB-based item creation view"""
     if request.method == 'POST':
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         # User is already authenticated and active due to decorator
         user = request.mongo_user
@@ -933,7 +933,7 @@ def mongo_item_create_view(request):
 
 def mongo_activity_list_view(request):
     """MongoDB-based activity list view"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # Get filter parameters
     category = request.GET.get('category', '')
@@ -1022,7 +1022,7 @@ def mongo_activity_list_view(request):
 def mongo_activity_create_view(request):
     """MongoDB-based activity creation view"""
     if request.method == 'POST':
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         # Get current user
         user_email = request.session.get('mongo_user_email')
@@ -1078,7 +1078,7 @@ from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["GET", "POST"])
 def contact_admin(request):
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
     user = _get_session_user(request)
     if request.method == "POST":
         subject = (request.POST.get("subject") or "").strip()
@@ -1127,7 +1127,7 @@ from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["GET", "POST"])
 def password_reset_start(request):
-    ensure_mongo_connection()  # חשוב כדי שלא נקבל "You have not defined a default connection"
+    ensure_mongodb_connection()  # חשוב כדי שלא נקבל "You have not defined a default connection"
 
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip().lower()
@@ -1156,7 +1156,7 @@ from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["GET", "POST"])
 def password_reset_confirm(request, uidb64=None, token=None):
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # 1) מנסים לחלץ אימייל מתוך ה-token החתום שהגיע ב-URL
     email = None
@@ -1249,7 +1249,7 @@ def mongo_logout_view(request):
 @mongo_auth_required
 def mongo_profile_view(request):
     """MongoDB-based profile view"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1269,7 +1269,7 @@ def mongo_profile_view(request):
 def mongo_profile_update_view(request):
     """MongoDB-based profile update view"""
     if request.method == 'POST':
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
 
         user_email = request.session.get('mongo_user_email')
         if not user_email:
@@ -1316,7 +1316,7 @@ def mongo_profile_update_view(request):
 def mongo_update_donation_status_view(request, donation_id):
     """Update donation status (available/claimed/shipped)"""
     if request.method == 'POST':
-        ensure_mongo_connection()
+        ensure_mongodb_connection()
         try:
             from bson import ObjectId
             donation = MongoDonation.objects(id=ObjectId(donation_id)).first()
@@ -1336,7 +1336,7 @@ def mongo_update_donation_status_view(request, donation_id):
 @mongo_auth_required
 def mongo_update_activity_status_view(request, activity_id):
     """Update activity status (available/completed/cancelled)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
     
     # User is already authenticated and active due to decorator
     user = request.mongo_user
@@ -1373,7 +1373,7 @@ def mongo_update_activity_status_view(request, activity_id):
 
 def mongo_become_recipient_view(request):
     """Create recipient profile for current user"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1411,7 +1411,7 @@ def mongo_become_recipient_view(request):
 
 def mongo_become_volunteer_view(request):
     """Create volunteer profile for current user"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1446,7 +1446,7 @@ def mongo_become_volunteer_view(request):
 
 def mongo_become_donor_view(request):
     """Create donor profile for current user"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1481,7 +1481,7 @@ def mongo_become_donor_view(request):
 @mongo_auth_required
 def mongo_claim_donation_view(request, donation_id):
     """Claim a donation (for recipients)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # User is already authenticated and active due to decorator
     user = request.mongo_user
@@ -1537,7 +1537,7 @@ def mongo_claim_donation_view(request, donation_id):
 
 def mongo_delete_donation_view(request, donation_id):
     """Delete a donation (for donors)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1570,7 +1570,7 @@ def mongo_delete_donation_view(request, donation_id):
 
 def mongo_update_donation_view(request, donation_id):
     """Update donation details (for donors)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:
@@ -1608,7 +1608,7 @@ def mongo_update_donation_view(request, donation_id):
 @mongo_auth_required
 def mongo_join_activity_view(request, activity_id):
     """Join an activity (for volunteers)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # User is already authenticated and active due to decorator
     user = request.mongo_user
@@ -1698,7 +1698,7 @@ def mongo_join_activity_view(request, activity_id):
 @mongo_auth_required
 def mongo_leave_activity_view(request, activity_id):
     """Leave an activity (for volunteers)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     # User is already authenticated and active due to decorator
     user = request.mongo_user
@@ -1745,7 +1745,7 @@ def mongo_leave_activity_view(request, activity_id):
 
 def mongo_delete_activity_view(request, activity_id):
     """Delete an activity (for volunteers who created it)"""
-    ensure_mongo_connection()
+    ensure_mongodb_connection()
 
     user_email = request.session.get('mongo_user_email')
     if not user_email:

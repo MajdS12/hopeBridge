@@ -34,6 +34,16 @@ def connect_to_mongodb():
         logger.error(f"Failed to connect to MongoDB: {e}")
         return False
 
+# Global connection flag to avoid multiple connections
+_mongodb_connected = False
+
+def ensure_mongodb_connection():
+    """Ensure MongoDB is connected, only connect once"""
+    global _mongodb_connected
+    if not _mongodb_connected:
+        _mongodb_connected = connect_to_mongodb()
+    return _mongodb_connected
+
 def disconnect_from_mongodb():
     """Disconnect from MongoDB"""
     try:

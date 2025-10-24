@@ -5,13 +5,12 @@ import requests
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from mongo_utils import connect_to_mongodb, get_mongodb_connection
+from mongo_utils import connect_to_mongodb, get_mongodb_connection, ensure_mongodb_connection
 from mongo_models import User as MongoUser, Address as MongoAddress
 
 def _ensure_mongo():
     try:
-        if not get_mongodb_connection():
-            connect_to_mongodb()
+        ensure_mongodb_connection()
     except Exception as e:
         logger.error(f"Failed to ensure MongoDB connection: {e}")
         # Try to connect anyway
