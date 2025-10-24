@@ -115,7 +115,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Site configuration for allauth
 SITE_ID = 1
 
-# Force HTTPS for OAuth redirects
+# Force HTTPS for OAuth redirects (Railway uses X-Forwarded-Proto header)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_TZ = True
 
