@@ -66,7 +66,8 @@ SOCIALACCOUNT_PROVIDERS = {
         'APP': {
             'client_id': os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''),
             'secret': os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''),
-        }
+        },
+        'OAUTH_PKCE_ENABLED': True,
     }
 }
 
@@ -110,6 +111,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://web-production-cc44a.up.railway.app',
     'https://web-production-cc44a.up.railway.app/',
 ]
+
+# Site configuration for allauth
+SITE_ID = 1
 
 ROOT_URLCONF = 'urls'
 
