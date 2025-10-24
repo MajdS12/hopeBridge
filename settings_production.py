@@ -48,10 +48,10 @@ AUTH_USER_MODEL = 'users.User'
 # Allauth settings
 SOCIALACCOUNT_ADAPTER = 'users.social_adapter.CustomSocialAccountAdapter'
 ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_SIGNUP_REDIRECT_URL = 'welcome'
+ACCOUNT_SIGNUP_REDIRECT_URL = 'onboarding'  # New users also go to role selection
 
-# Prevent allauth redirect loops
-LOGIN_REDIRECT_URL = 'welcome'
+# Redirect to role selection after successful login
+LOGIN_REDIRECT_URL = 'onboarding'  # This will redirect to role selection
 LOGOUT_REDIRECT_URL = 'welcome'
 
 # Google OAuth provider
