@@ -105,6 +105,12 @@ CSRF_COOKIE_SAMESITE = 'Strict'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
+# CSRF Trusted Origins for OAuth
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-cc44a.up.railway.app',
+    'https://web-production-cc44a.up.railway.app/',
+]
+
 ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
@@ -194,6 +200,8 @@ LOCALE_PATHS = [
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Additional static files directories
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
