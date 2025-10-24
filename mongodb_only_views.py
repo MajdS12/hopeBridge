@@ -112,6 +112,11 @@ def _get_session_user(request):
 def onboarding(request):
     user = _get_session_user(request)
     if not user:
+        # Debug: Let's see what's in the session and request
+        print(f"DEBUG: No user found in onboarding")
+        print(f"DEBUG: Session keys: {list(request.session.keys())}")
+        print(f"DEBUG: Django user: {getattr(request, 'user', None)}")
+        print(f"DEBUG: Django user authenticated: {getattr(request.user, 'is_authenticated', False) if hasattr(request, 'user') else 'No user attr'}")
         return redirect('login')
 
     if request.method == "POST":
