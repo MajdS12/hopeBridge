@@ -7,7 +7,13 @@ logger = logging.getLogger(__name__)
 def connect_to_mongodb():
     """Connect to MongoDB using settings from Django configuration"""
     try:
-        # Build connection parameters
+        # Try using connection string first (for Railway)
+        if hasattr(settings, 'MONGODB_URI') and settings.MONGODB_URI:
+            connect(host=settings.MONGODB_URI, alias='default')
+            logger.info(f"Connected to MongoDB using URI: {settings.MONGODB_URI}")
+            return True
+        
+        # Fallback to individual parameters
         connection_params = {
             'db': settings.MONGODB_DATABASE,
             'host': settings.MONGODB_HOST,

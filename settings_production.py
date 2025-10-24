@@ -188,7 +188,8 @@ else:
         }
     }
 
-# MongoDB Configuration (using Railway's default variable names)
+# MongoDB Configuration (using Railway's connection string)
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/donation_management_db')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'donation_management_db')
 MONGODB_HOST = os.environ.get('MONGOHOST', 'localhost')
 MONGODB_PORT = int(os.environ.get('MONGOPORT', '27017'))
