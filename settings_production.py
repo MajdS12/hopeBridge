@@ -83,7 +83,7 @@ MIDDLEWARE = [
 ]
 
 # Security Settings
-SECURE_SSL_REDIRECT = True  # Force HTTPS redirects
+SECURE_SSL_REDIRECT = False  # Disabled for Railway (handles HTTPS at load balancer)
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -114,6 +114,10 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Site configuration for allauth
 SITE_ID = 1
+
+# Force HTTPS for OAuth redirects
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_TZ = True
 
 # Debug logging for allauth
 LOGGING = {
