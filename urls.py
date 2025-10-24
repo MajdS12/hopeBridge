@@ -14,10 +14,10 @@ def health_check(request):
     # Railway expects a simple 200 OK response with plain text
     return HttpResponse("OK", status=200)
 
-# Ultra-simple test view for root path
-def simple_welcome(request):
-    from django.http import HttpResponse
-    return HttpResponse("Hello World! HopeBridge is working!", content_type="text/plain")
+# Welcome view for root path
+def welcome_view(request):
+    from django.shortcuts import render
+    return render(request, 'welcome.html')
 
 # ---- יבוא עקבי של כל ה-views שלנו ----
 from mongodb_only_views import (
@@ -70,10 +70,9 @@ urlpatterns += [
 ]
 
 # ---- allauth ----
-# Temporarily disabled for testing
-# urlpatterns += [
-#     path('accounts/', include('allauth.urls')),
-# ]
+urlpatterns += [
+    path('accounts/', include('allauth.urls')),
+]
 
 # ---- Onboarding + No-roles ----
 urlpatterns += [
@@ -83,7 +82,7 @@ urlpatterns += [
 
 # ---- Main & Auth ----
 urlpatterns += [
-    path('', simple_welcome, name='welcome'),
+    path('', welcome_view, name='welcome'),
     path('login/',    mongo_login_view,    name='login'),
     path('logout/',   mongo_logout_view,   name='logout'),
     path('register/', mongo_register_view, name='register'),
