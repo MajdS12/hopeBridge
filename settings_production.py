@@ -83,7 +83,7 @@ MIDDLEWARE = [
 ]
 
 # Security Settings
-SECURE_SSL_REDIRECT = False  # Temporarily disable for testing
+SECURE_SSL_REDIRECT = True  # Force HTTPS redirects
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -114,6 +114,27 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Site configuration for allauth
 SITE_ID = 1
+
+# Debug logging for allauth
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'allauth': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
 
 ROOT_URLCONF = 'urls'
 
