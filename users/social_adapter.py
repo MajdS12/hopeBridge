@@ -9,7 +9,12 @@ from mongo_utils import connect_to_mongodb, get_mongodb_connection
 from mongo_models import User as MongoUser, Address as MongoAddress
 
 def _ensure_mongo():
-    if not get_mongodb_connection():
+    try:
+        if not get_mongodb_connection():
+            connect_to_mongodb()
+    except Exception as e:
+        logger.error(f"Failed to ensure MongoDB connection: {e}")
+        # Try to connect anyway
         connect_to_mongodb()
 
 logger = logging.getLogger(__name__)
@@ -90,6 +95,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         # --------- סנכרון ל-Mongo ---------
         try:
             _ensure_mongo()
+            logger.info(f"Attempting to find/create MongoUser for email: {user.email}")
             m_user = MongoUser.objects(email=user.email).first()
             if not m_user:
                 # יוצרים משתמש Mongo ראשוני
@@ -127,6 +133,9 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             request.session['mongo_user_is_superuser'] = bool(getattr(m_user, "is_superuser", False))
         except Exception as e:
             logger.exception("Mongo sync after social login failed: %s", e)
+            # Don't fail the entire login process if MongoDB sync fails
+            # Just log the error and continue
+            pass
 
         # --------- (לא שינינו) משיכת טלפון מ-Google People API ---------
         if getattr(user, "phone", "").strip():
