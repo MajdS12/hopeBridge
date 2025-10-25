@@ -636,8 +636,53 @@ def mongo_resend_code_view(request):
 
 def mongo_dashboard_view(request):
     """MongoDB-based dashboard view"""
-    ensure_mongodb_connection()
+    user = _get_session_user(request)
+    if not user:
+        return redirect('login')
 
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_dashboard_view, using session data")
+        # Use session data for roles
+        user_roles = request.session.get('user_roles', {})
+        is_donor = user_roles.get('is_donor', False)
+        is_recipient = user_roles.get('is_recipient', False)
+        is_volunteer = user_roles.get('is_volunteer', False)
+        
+        # Create empty context for fallback
+        context = {
+            'user': user,
+            'is_donor': is_donor,
+            'is_recipient': is_recipient,
+            'is_volunteer': is_volunteer,
+            'items': [],
+            'donations': [],
+            'total_donations': 0,
+            'available_donations': 0,
+            'claimed_donations': 0,
+            'people_helped': 0,
+        }
+        
+        # Determine which dashboard to show based on URL path
+        request_path = request.path
+        if '/dashboard/donor/' in request_path and is_donor:
+            return render(request, 'dashboard/donor_dashboard.html', context)
+        elif '/dashboard/recipient/' in request_path and is_recipient:
+            return render(request, 'dashboard/recipient_dashboard.html', context)
+        elif '/dashboard/volunteer/' in request_path and is_volunteer:
+            return render(request, 'dashboard/volunteer_dashboard.html', context)
+        else:
+            # Default to donor dashboard if user is a donor
+            if is_donor:
+                return render(request, 'dashboard/donor_dashboard.html', context)
+            elif is_recipient:
+                return render(request, 'dashboard/recipient_dashboard.html', context)
+            elif is_volunteer:
+                return render(request, 'dashboard/volunteer_dashboard.html', context)
+            else:
+                return redirect('onboarding')
+
+    # MongoDB is available, proceed with normal logic
     user_email = request.session.get('mongo_user_email')
     if not user_email:
         return redirect('login')
