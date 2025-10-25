@@ -1495,8 +1495,30 @@ def mongo_update_activity_status_view(request, activity_id):
 
 def mongo_become_recipient_view(request):
     """Create recipient profile for current user"""
-    ensure_mongodb_connection()
+    user = _get_session_user(request)
+    if not user:
+        messages.error(request, 'Please log in first.')
+        return redirect('login')
 
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_become_recipient_view, using session data")
+        # Use session data for roles
+        user_roles = request.session.get('user_roles', {})
+        
+        # Check if user already has recipient role
+        if user_roles.get('is_recipient', False):
+            messages.info(request, 'You already have a recipient profile.')
+            return redirect('recipient_dashboard')
+        
+        # Add recipient role to session
+        user_roles['is_recipient'] = True
+        request.session['user_roles'] = user_roles
+        
+        messages.success(request, 'Recipient profile created successfully!')
+        return redirect('recipient_dashboard')
+
+    # MongoDB is available, proceed with normal logic
     user_email = request.session.get('mongo_user_email')
     if not user_email:
         messages.error(request, 'Please log in first.')
@@ -1533,8 +1555,30 @@ def mongo_become_recipient_view(request):
 
 def mongo_become_volunteer_view(request):
     """Create volunteer profile for current user"""
-    ensure_mongodb_connection()
+    user = _get_session_user(request)
+    if not user:
+        messages.error(request, 'Please log in first.')
+        return redirect('login')
 
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_become_volunteer_view, using session data")
+        # Use session data for roles
+        user_roles = request.session.get('user_roles', {})
+        
+        # Check if user already has volunteer role
+        if user_roles.get('is_volunteer', False):
+            messages.info(request, 'You already have a volunteer profile.')
+            return redirect('volunteer_dashboard')
+        
+        # Add volunteer role to session
+        user_roles['is_volunteer'] = True
+        request.session['user_roles'] = user_roles
+        
+        messages.success(request, 'Volunteer profile created successfully!')
+        return redirect('volunteer_dashboard')
+
+    # MongoDB is available, proceed with normal logic
     user_email = request.session.get('mongo_user_email')
     if not user_email:
         messages.error(request, 'Please log in first.')
@@ -1563,13 +1607,35 @@ def mongo_become_volunteer_view(request):
     volunteer.save()
 
     messages.success(request, 'Volunteer profile created successfully!')
-    return redirect('activity_list')
+    return redirect('volunteer_dashboard')
 
 
 def mongo_become_donor_view(request):
     """Create donor profile for current user"""
-    ensure_mongodb_connection()
+    user = _get_session_user(request)
+    if not user:
+        messages.error(request, 'Please log in first.')
+        return redirect('login')
 
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_become_donor_view, using session data")
+        # Use session data for roles
+        user_roles = request.session.get('user_roles', {})
+        
+        # Check if user already has donor role
+        if user_roles.get('is_donor', False):
+            messages.info(request, 'You already have a donor profile.')
+            return redirect('donor_dashboard')
+        
+        # Add donor role to session
+        user_roles['is_donor'] = True
+        request.session['user_roles'] = user_roles
+        
+        messages.success(request, 'Donor profile created successfully!')
+        return redirect('donor_dashboard')
+
+    # MongoDB is available, proceed with normal logic
     user_email = request.session.get('mongo_user_email')
     if not user_email:
         messages.error(request, 'Please log in first.')
