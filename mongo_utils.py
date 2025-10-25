@@ -20,8 +20,6 @@ def connect_to_mongodb():
                         user, _ = user_pass.split(':', 1)
                         masked_uri = masked_uri.replace(user_pass, f"{user}:***")
             
-            logger.info(f"Attempting to connect to MongoDB using URI: {masked_uri}")
-            
             # Check if the URI contains railway.internal which might not be accessible
             if 'railway.internal' in settings.MONGODB_URI:
                 logger.warning("Railway internal MongoDB URI detected, this might not be accessible")
@@ -32,11 +30,25 @@ def connect_to_mongodb():
                     # Also replace the port if it's different
                     if hasattr(settings, 'MONGODB_PORT') and settings.MONGODB_PORT != 27017:
                         external_uri = external_uri.replace(':27017', f':{settings.MONGODB_PORT}')
-                    logger.info(f"Trying external MongoDB URI: {external_uri.replace('@', ':***@') if '@' in external_uri else external_uri}")
+                    
+                    # Log the external URI instead of the internal one
+                    external_masked_uri = external_uri
+                    if '@' in external_masked_uri:
+                        # Mask password in external URI for logging
+                        parts = external_masked_uri.split('@')
+                        if len(parts) == 2:
+                            user_pass = parts[0].split('://')[-1]
+                            if ':' in user_pass:
+                                user, _ = user_pass.split(':', 1)
+                                external_masked_uri = external_masked_uri.replace(user_pass, f"{user}:***")
+                    
+                    logger.info(f"Attempting to connect to MongoDB using external URI: {external_masked_uri}")
                     connect(host=external_uri, alias='default')
                 else:
+                    logger.info(f"Attempting to connect to MongoDB using URI: {masked_uri}")
                     connect(host=settings.MONGODB_URI, alias='default')
             else:
+                logger.info(f"Attempting to connect to MongoDB using URI: {masked_uri}")
                 connect(host=settings.MONGODB_URI, alias='default')
             logger.info(f"Successfully connected to MongoDB using URI")
             return True
