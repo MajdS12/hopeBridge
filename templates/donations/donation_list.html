@@ -360,8 +360,20 @@
                 {% for donation in donations %}
                 <div class="donation-card">
                     <div class="donation-header">
-                        <div class="donation-title">{{ donation.item.name }}</div>
-                        <div class="donation-status">{{ donation.status|title }}</div>
+                        <div class="donation-title">
+                            {% if donation.item.name %}
+                                {{ donation.item.name }}
+                            {% else %}
+                                {{ donation.name|default:"Unnamed Item" }}
+                            {% endif %}
+                        </div>
+                        <div class="donation-status">
+                            {% if donation.status %}
+                                {{ donation.status|title }}
+                            {% else %}
+                                Available
+                            {% endif %}
+                        </div>
                     </div>
                     
                     {% if donation.item.image %}
@@ -370,42 +382,75 @@
                              style="max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: cover; cursor: pointer;"
                              onclick="openImageModal('{{ donation.item.image.url }}', '{{ donation.item.name }}')">
                     </div>
+                    {% elif donation.image_url %}
+                    <div class="donation-image" style="margin-bottom: 15px; text-align: center;">
+                        <img src="{{ donation.image_url }}" alt="{{ donation.name }}" 
+                             style="max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: cover; cursor: pointer;"
+                             onclick="openImageModal('{{ donation.image_url }}', '{{ donation.name }}')">
+                    </div>
                     {% endif %}
                     
                     <div class="donation-description">
-                        {{ donation.item.description|truncatewords:20 }}
+                        {% if donation.item.description %}
+                            {{ donation.item.description|truncatewords:20 }}
+                        {% else %}
+                            {{ donation.description|truncatewords:20|default:"No description provided" }}
+                        {% endif %}
                     </div>
                     
                     <div class="donation-details">
                         <div class="detail-item">
                             <div class="detail-label">Category</div>
-                            <div class="detail-value">{{ donation.item.category }}</div>
+                            <div class="detail-value">
+                                {% if donation.item.category %}
+                                    {{ donation.item.category }}
+                                {% else %}
+                                    {{ donation.category|default:"Not specified" }}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Condition</div>
-                            <div class="detail-value">{{ donation.item.condition }}</div>
+                            <div class="detail-value">
+                                {% if donation.item.condition %}
+                                    {{ donation.item.condition }}
+                                {% else %}
+                                    {{ donation.condition|default:"Not specified" }}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Donor</div>
-                            <div class="detail-value">{{ donation.donor.user.name }}</div>
+                            <div class="detail-value">
+                                {% if donation.donor.user.name %}
+                                    {{ donation.donor.user.name }}
+                                {% else %}
+                                    {{ user.name|default:"Anonymous" }}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Date</div>
-                            <div class="detail-value">{{ donation.created_at|date:"M d, Y" }}</div>
+                            <div class="detail-value">
+                                {% if donation.created_at %}
+                                    {{ donation.created_at|date:"M d, Y" }}
+                                {% else %}
+                                    Today
+                                {% endif %}
+                            </div>
                         </div>
-     <div class="detail-item" style="grid-column: span 2;">
-  <div class="detail-label">Location</div>
-  <div class="detail-value">
-    {% if donation.item.item_location %}
-      {{ donation.item.item_location }}
-    {% else %}
-      Not provided
-    {% endif %}
-  </div>
-</div>
-
-
-
+                        <div class="detail-item" style="grid-column: span 2;">
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value">
+                                {% if donation.item.item_location %}
+                                    {{ donation.item.item_location }}
+                                {% elif donation.item_location %}
+                                    {{ donation.item_location }}
+                                {% else %}
+                                    Not provided
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="donation-actions">
@@ -418,9 +463,13 @@
                         {% endif %}
                         {% if donation.item.image %}
                             <button onclick="openImageModal('{{ donation.item.image.url }}', '{{ donation.item.name }}')" class="btn btn-primary" style="margin-left: 8px;">View Image</button>
+                        {% elif donation.image_url %}
+                            <button onclick="openImageModal('{{ donation.image_url }}', '{{ donation.name }}')" class="btn btn-primary" style="margin-left: 8px;">View Image</button>
                         {% endif %}
                         {% if donation.item.latitude and donation.item.longitude %}
                             <a href="https://www.google.com/maps/search/?api=1&query={{ donation.item.latitude }},{{ donation.item.longitude }}" target="_blank" class="btn btn-primary" style="margin-left: 8px;">View on Google Maps</a>
+                        {% elif donation.latitude and donation.longitude %}
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ donation.latitude }},{{ donation.longitude }}" target="_blank" class="btn btn-primary" style="margin-left: 8px;">View on Google Maps</a>
                         {% endif %}
                     </div>
                 </div>
