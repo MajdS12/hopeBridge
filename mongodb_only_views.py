@@ -1210,8 +1210,8 @@ def mongo_activity_create_view(request):
         volunteer = MongoVolunteer.objects(user_id=user.id).first()
     else:
         # Fallback: Check session for volunteer role
-        user_roles = request.session.get('user_roles', [])
-        if 'volunteer' in user_roles:
+        user_roles = request.session.get('user_roles', {})
+        if user_roles.get('is_volunteer', False):
             # Create a mock volunteer profile for session-based user
             class MockMongoVolunteer:
                 def __init__(self, user_id):
