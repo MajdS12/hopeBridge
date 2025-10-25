@@ -133,7 +133,16 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         except Exception as e:
             logger.exception("Mongo sync after social login failed: %s", e)
             # Don't fail the entire login process if MongoDB sync fails
-            # Just log the error and continue
+            # Set session data from Django user as fallback
+            try:
+                request.session['mongo_user_id'] = str(user.id)
+                request.session['mongo_user_email'] = user.email
+                request.session['mongo_user_name'] = getattr(user, "name", "") or user.email.split("@")[0]
+                request.session['mongo_user_is_staff'] = False
+                request.session['mongo_user_is_superuser'] = False
+                logger.info(f"Set fallback session data for user: {user.email}")
+            except Exception as session_error:
+                logger.error(f"Failed to set fallback session data: {session_error}")
             pass
 
         # --------- (לא שינינו) משיכת טלפון מ-Google People API ---------

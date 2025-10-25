@@ -27,6 +27,9 @@ from django.contrib.auth.password_validation import (
     CommonPasswordValidator,
     UserAttributeSimilarityValidator,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 NAME_RE = re.compile(r"^[^\W\d_]+(?: [^\W\d_]+)*$", re.UNICODE)
 
@@ -61,52 +64,79 @@ class SimpleUserLike:
         self.last_name = last_name or ""
 
 def _get_session_user(request):
-    ensure_mongodb_connection()
-    user_email = request.session.get('mongo_user_email')
-    if user_email:
-        return MongoUser.objects(email=user_email).first()
-
-    # fallback: אם allauth חיבר אותנו כמשתמש Django – נסנכרן למונגו ולסשן
-    dj_user = getattr(request, "user", None)
-    if dj_user and getattr(dj_user, "is_authenticated", False):
+    try:
         ensure_mongodb_connection()
+        user_email = request.session.get('mongo_user_email')
+        if user_email:
+            return MongoUser.objects(email=user_email).first()
 
-        email = (getattr(dj_user, "email", "") or "").lower()
-        if not email:
-            return None
+        # fallback: אם allauth חיבר אותנו כמשתמש Django – נסנכרן למונגו ולסשן
+        dj_user = getattr(request, "user", None)
+        if dj_user and getattr(dj_user, "is_authenticated", False):
+            ensure_mongodb_connection()
 
-        mu = MongoUser.objects(email=email).first()
-        # למעלה כבר יש לך: from django.contrib.auth.hashers import check_password, make_password
+            email = (getattr(dj_user, "email", "") or "").lower()
+            if not email:
+                return None
 
-        if not mu:
-            # גוזרים שם בסיסי...
-            first = (getattr(dj_user, "first_name", "") or "").strip()
-            last = (getattr(dj_user, "last_name", "") or "").strip()
-            name = (f"{first} {last}".strip()
-                    or (getattr(dj_user, "name", "") or "").strip()
-                    or email.split("@")[0].replace(".", " ").replace("_", " ").strip())
+            mu = MongoUser.objects(email=email).first()
+            # למעלה כבר יש לך: from django.contrib.auth.hashers import check_password, make_password
 
-            mu = MongoUser(
-                email=email,
-                name=name,
-                phone="",  # כדי לעמוד בדרישה אם השדה חובה
-                password_hash=make_password('sociallogin'),  # ← הוספה חשובה
-                is_active=True,
-                is_staff=False,
-                is_superuser=False,
-                date_joined=datetime.utcnow(),
-            )
-            mu.save()
+            if not mu:
+                # גוזרים שם בסיסי...
+                first = (getattr(dj_user, "first_name", "") or "").strip()
+                last = (getattr(dj_user, "last_name", "") or "").strip()
+                name = (f"{first} {last}".strip()
+                        or (getattr(dj_user, "name", "") or "").strip()
+                        or email.split("@")[0].replace(".", " ").replace("_", " ").strip())
 
-        # נשמור בסשן כדי ששאר ה־views יעבדו
-        request.session["mongo_user_id"] = str(mu.id)
-        request.session["mongo_user_email"] = mu.email
-        request.session["mongo_user_name"] = mu.name
-        request.session["mongo_user_is_staff"] = getattr(mu, "is_staff", False)
-        request.session["mongo_user_is_superuser"] = getattr(mu, "is_superuser", False)
-        return mu
+                mu = MongoUser(
+                    email=email,
+                    name=name,
+                    phone="",  # כדי לעמוד בדרישה אם השדה חובה
+                    password_hash=make_password('sociallogin'),  # ← הוספה חשובה
+                    is_active=True,
+                    is_staff=False,
+                    is_superuser=False,
+                    date_joined=datetime.utcnow(),
+                )
+                mu.save()
 
-    return None
+            # נשמור בסשן כדי ששאר ה־views יעבדו
+            request.session["mongo_user_id"] = str(mu.id)
+            request.session["mongo_user_email"] = mu.email
+            request.session["mongo_user_name"] = mu.name
+            request.session["mongo_user_is_staff"] = getattr(mu, "is_staff", False)
+            request.session["mongo_user_is_superuser"] = getattr(mu, "is_superuser", False)
+            return mu
+
+        return None
+    except Exception as e:
+        # If MongoDB is not available, create a mock user from Django user
+        logger.error(f"MongoDB not available in _get_session_user: {e}")
+        dj_user = getattr(request, "user", None)
+        if dj_user and getattr(dj_user, "is_authenticated", False):
+            # Create a mock user object that works without MongoDB
+            class MockMongoUser:
+                def __init__(self, dj_user):
+                    self.id = str(dj_user.id)
+                    self.email = dj_user.email
+                    self.name = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
+                    self.phone = getattr(dj_user, "phone", "")
+                    self.is_active = True
+                    self.is_staff = getattr(dj_user, "is_staff", False)
+                    self.is_superuser = getattr(dj_user, "is_superuser", False)
+                    self.address = None
+            
+            # Store in session for consistency
+            request.session["mongo_user_id"] = str(dj_user.id)
+            request.session["mongo_user_email"] = dj_user.email
+            request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
+            request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
+            request.session["mongo_user_is_superuser"] = getattr(dj_user, "is_superuser", False)
+            
+            return MockMongoUser(dj_user)
+        return None
 
 
 def onboarding(request):
