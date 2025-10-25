@@ -291,16 +291,10 @@ def ensure_mongodb_connection():
 def mongo_auth_required(view_func):
     """Decorator to require MongoDB authentication and active user status"""
     def wrapper(request, *args, **kwargs):
-        ensure_mongodb_connection()
-        
-        user_email = request.session.get('mongo_user_email')
-        if not user_email:
-            messages.error(request, 'Please log in first.')
-            return redirect('login')
-        
-        user = MongoUser.objects(email=user_email).first()
+        # Use our fallback user system
+        user = _get_session_user(request)
         if not user:
-            messages.error(request, 'User not found.')
+            messages.error(request, 'Please log in first.')
             return redirect('login')
         
         # Check if user is active
