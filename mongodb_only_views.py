@@ -911,16 +911,20 @@ def mongo_item_list_view(request):
         is_recipient = user_roles.get('is_recipient', False)
         is_donor = user_roles.get('is_donor', False)
         
-        # Create empty context for fallback
+        # Get temporary donations from session
+        temp_donations = request.session.get('temp_donations', [])
+        
+        # Create context for fallback with temporary donations
         context = {
-            'items': [],
-            'donations': [],
-            'categories': [],
-            'conditions': [],
+            'items': temp_donations,  # Show temporary donations as items
+            'donations': temp_donations,
+            'categories': ['Electronics', 'Clothing', 'Books', 'Furniture', 'Toys', 'Other'],
+            'conditions': ['New', 'Like New', 'Good', 'Fair', 'Poor'],
             'current_category': '',
             'current_condition': '',
             'search_query': '',
             'user': user,
+            'mongodb_available': False,
         }
         return render(request, 'donations/donation_list.html', context)
 
@@ -1037,8 +1041,39 @@ def mongo_item_create_view(request):
 
     # Check if MongoDB is available
     if not ensure_mongodb_connection():
-        logger.warning("MongoDB not available in mongo_item_create_view, showing form only")
-        # Show the form but disable functionality
+        logger.warning("MongoDB not available in mongo_item_create_view, using fallback system")
+        
+        if request.method == 'POST':
+            # Handle POST request with fallback system
+            # Check if user has donor role in session
+            user_roles = request.session.get('user_roles', {})
+            if not user_roles.get('is_donor', False):
+                messages.error(request, 'Donor profile not found. Please become a donor first.')
+                return redirect('welcome')
+            
+            # Store donation data in session (temporary storage)
+            donation_data = {
+                'name': request.POST.get('name'),
+                'description': request.POST.get('description'),
+                'category': request.POST.get('category'),
+                'condition': request.POST.get('condition'),
+                'image_url': request.POST.get('image_url', ''),
+                'latitude': float(request.POST.get('latitude', 0)) if request.POST.get('latitude') else None,
+                'longitude': float(request.POST.get('longitude', 0)) if request.POST.get('longitude') else None,
+                'item_location': request.POST.get('item_location', ''),
+                'created_at': datetime.utcnow().isoformat(),
+                'donor_id': user.id
+            }
+            
+            # Store in session
+            donations = request.session.get('temp_donations', [])
+            donations.append(donation_data)
+            request.session['temp_donations'] = donations
+            
+            messages.success(request, 'Donation item created successfully! (Stored temporarily - will be saved to database when MongoDB is available)')
+            return redirect('item_list')
+        
+        # Show the form
         context = {
             'user': user,
             'mongodb_available': False,
