@@ -93,7 +93,18 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         # --------- סנכרון ל-Mongo ---------
         try:
-            _ensure_mongo()
+            # Check if MongoDB is available before trying to use it
+            if not ensure_mongodb_connection():
+                logger.warning("MongoDB not available, using fallback user system")
+                # Set session data from Django user as fallback
+                request.session['mongo_user_id'] = str(user.id)
+                request.session['mongo_user_email'] = user.email
+                request.session['mongo_user_name'] = getattr(user, "name", "") or user.email.split("@")[0]
+                request.session['mongo_user_is_staff'] = False
+                request.session['mongo_user_is_superuser'] = False
+                logger.info(f"Set fallback session data for user: {user.email}")
+                return user
+            
             logger.info(f"Attempting to find/create MongoUser for email: {user.email}")
             m_user = MongoUser.objects(email=user.email).first()
             if not m_user:
@@ -176,11 +187,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                         user.save(update_fields=["phone"])
                         # נסה להשלים גם ב-Mongo אם חסר
                         try:
-                            _ensure_mongo()
-                            m = MongoUser.objects(email=user.email).first()
-                            if m and not getattr(m, "phone", ""):
-                                m.phone = norm
-                                m.save()
+                            if ensure_mongodb_connection():
+                                m = MongoUser.objects(email=user.email).first()
+                                if m and not getattr(m, "phone", ""):
+                                    m.phone = norm
+                                    m.save()
                         except Exception:
                             pass
             else:
