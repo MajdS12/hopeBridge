@@ -21,7 +21,20 @@ def connect_to_mongodb():
                         masked_uri = masked_uri.replace(user_pass, f"{user}:***")
             
             logger.info(f"Attempting to connect to MongoDB using URI: {masked_uri}")
-            connect(host=settings.MONGODB_URI, alias='default')
+            
+            # Check if the URI contains railway.internal which might not be accessible
+            if 'railway.internal' in settings.MONGODB_URI:
+                logger.warning("Railway internal MongoDB URI detected, this might not be accessible")
+                # Try to construct a working URI using environment variables
+                if hasattr(settings, 'MONGODB_HOST') and settings.MONGODB_HOST != 'localhost':
+                    # Use the external hostname instead
+                    external_uri = settings.MONGODB_URI.replace('mongodb.railway.internal', settings.MONGODB_HOST)
+                    logger.info(f"Trying external MongoDB URI: {external_uri.replace('@', ':***@') if '@' in external_uri else external_uri}")
+                    connect(host=external_uri, alias='default')
+                else:
+                    connect(host=settings.MONGODB_URI, alias='default')
+            else:
+                connect(host=settings.MONGODB_URI, alias='default')
             logger.info(f"Successfully connected to MongoDB using URI")
             return True
         
@@ -50,6 +63,10 @@ def connect_to_mongodb():
         logger.error(f"MongoDB settings - Host: {getattr(settings, 'MONGODB_HOST', 'Not set')}")
         logger.error(f"MongoDB settings - Port: {getattr(settings, 'MONGODB_PORT', 'Not set')}")
         logger.error(f"MongoDB settings - Database: {getattr(settings, 'MONGODB_DATABASE', 'Not set')}")
+        
+        # If MongoDB connection fails, we'll continue without it
+        # The application should still work for basic functionality
+        logger.warning("MongoDB connection failed, continuing without MongoDB support")
         return False
 
 # Global connection flag to avoid multiple connections

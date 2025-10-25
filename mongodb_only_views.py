@@ -65,7 +65,11 @@ class SimpleUserLike:
 
 def _get_session_user(request):
     try:
-        ensure_mongodb_connection()
+        # Check if MongoDB is available first
+        if not ensure_mongodb_connection():
+            logger.warning("MongoDB not available, using fallback user system")
+            return _get_fallback_user(request)
+        
         user_email = request.session.get('mongo_user_email')
         if user_email:
             return MongoUser.objects(email=user_email).first()
@@ -73,8 +77,6 @@ def _get_session_user(request):
         # fallback: אם allauth חיבר אותנו כמשתמש Django – נסנכרן למונגו ולסשן
         dj_user = getattr(request, "user", None)
         if dj_user and getattr(dj_user, "is_authenticated", False):
-            ensure_mongodb_connection()
-
             email = (getattr(dj_user, "email", "") or "").lower()
             if not email:
                 return None
@@ -114,29 +116,33 @@ def _get_session_user(request):
     except Exception as e:
         # If MongoDB is not available, create a mock user from Django user
         logger.error(f"MongoDB not available in _get_session_user: {e}")
-        dj_user = getattr(request, "user", None)
-        if dj_user and getattr(dj_user, "is_authenticated", False):
-            # Create a mock user object that works without MongoDB
-            class MockMongoUser:
-                def __init__(self, dj_user):
-                    self.id = str(dj_user.id)
-                    self.email = dj_user.email
-                    self.name = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
-                    self.phone = getattr(dj_user, "phone", "")
-                    self.is_active = True
-                    self.is_staff = getattr(dj_user, "is_staff", False)
-                    self.is_superuser = getattr(dj_user, "is_superuser", False)
-                    self.address = None
-            
-            # Store in session for consistency
-            request.session["mongo_user_id"] = str(dj_user.id)
-            request.session["mongo_user_email"] = dj_user.email
-            request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
-            request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
-            request.session["mongo_user_is_superuser"] = getattr(dj_user, "is_superuser", False)
-            
-            return MockMongoUser(dj_user)
-        return None
+        return _get_fallback_user(request)
+
+def _get_fallback_user(request):
+    """Fallback user system when MongoDB is not available"""
+    dj_user = getattr(request, "user", None)
+    if dj_user and getattr(dj_user, "is_authenticated", False):
+        # Create a mock user object that works without MongoDB
+        class MockMongoUser:
+            def __init__(self, dj_user):
+                self.id = str(dj_user.id)
+                self.email = dj_user.email
+                self.name = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
+                self.phone = getattr(dj_user, "phone", "")
+                self.is_active = True
+                self.is_staff = getattr(dj_user, "is_staff", False)
+                self.is_superuser = getattr(dj_user, "is_superuser", False)
+                self.address = None
+        
+        # Store in session for consistency
+        request.session["mongo_user_id"] = str(dj_user.id)
+        request.session["mongo_user_email"] = dj_user.email
+        request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
+        request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
+        request.session["mongo_user_is_superuser"] = getattr(dj_user, "is_superuser", False)
+        
+        return MockMongoUser(dj_user)
+    return None
 
 
 def onboarding(request):
@@ -159,11 +165,31 @@ def onboarding(request):
         if selected_count == 0:
             return redirect("no_roles")
 
-        if want_donor and not MongoDonor.objects(user_id=user.id).first():     MongoDonor(user_id=user.id).save()
-        if want_recipient and not MongoRecipient.objects(user_id=user.id).first(): MongoRecipient(
-            user_id=user.id).save()
-        if want_volunteer and not MongoVolunteer.objects(user_id=user.id).first(): MongoVolunteer(
-            user_id=user.id).save()
+        # Check if MongoDB is available before trying to create profiles
+        if not ensure_mongodb_connection():
+            logger.warning("MongoDB not available during onboarding, storing roles in session")
+            # Store the selected roles in session for later use
+            request.session['user_roles'] = {
+                'is_donor': want_donor,
+                'is_recipient': want_recipient,
+                'is_volunteer': want_volunteer
+            }
+            request.session['onboarding_completed'] = True
+            
+            # Redirect to appropriate dashboard based on selection
+            if selected_count == 1:
+                if want_donor:     return redirect("donor_dashboard")
+                if want_recipient: return redirect("recipient_dashboard")
+                return redirect("volunteer_dashboard")
+            return redirect("dashboard_selection")
+
+        # MongoDB is available, create profiles normally
+        if want_donor and not MongoDonor.objects(user_id=user.id).first():     
+            MongoDonor(user_id=user.id).save()
+        if want_recipient and not MongoRecipient.objects(user_id=user.id).first(): 
+            MongoRecipient(user_id=user.id).save()
+        if want_volunteer and not MongoVolunteer.objects(user_id=user.id).first(): 
+            MongoVolunteer(user_id=user.id).save()
 
         if selected_count == 1:
             if want_donor:     return redirect("donor_dashboard")
@@ -180,10 +206,19 @@ def dashboard_selection_view(request):
     if not user:
         return redirect('login')
 
-    # בדיקת התפקידים במונגו
-    has_donor = MongoDonor.objects(user_id=user.id).first() is not None
-    has_recipient = MongoRecipient.objects(user_id=user.id).first() is not None
-    has_volunteer = MongoVolunteer.objects(user_id=user.id).first() is not None
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in dashboard_selection_view, using session data")
+        # Use session data for roles
+        user_roles = request.session.get('user_roles', {})
+        has_donor = user_roles.get('is_donor', False)
+        has_recipient = user_roles.get('is_recipient', False)
+        has_volunteer = user_roles.get('is_volunteer', False)
+    else:
+        # בדיקת התפקידים במונגו
+        has_donor = MongoDonor.objects(user_id=user.id).first() is not None
+        has_recipient = MongoRecipient.objects(user_id=user.id).first() is not None
+        has_volunteer = MongoVolunteer.objects(user_id=user.id).first() is not None
 
     # אם אין שום תפקיד – לעמוד "no roles"
     if not (has_donor or has_recipient or has_volunteer):

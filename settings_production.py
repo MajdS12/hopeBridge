@@ -196,6 +196,12 @@ MONGODB_PORT = int(os.environ.get('MONGOPORT', '27017'))
 MONGODB_USER = os.environ.get('MONGOUSER', '')
 MONGODB_PASSWORD = os.environ.get('MONGOPASSWORD', '')
 
+# Debug MongoDB configuration
+print(f"DEBUG: MONGODB_URI = {MONGODB_URI}")
+print(f"DEBUG: MONGODB_HOST = {MONGODB_HOST}")
+print(f"DEBUG: MONGODB_PORT = {MONGODB_PORT}")
+print(f"DEBUG: MONGODB_DATABASE = {MONGODB_DATABASE}")
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
