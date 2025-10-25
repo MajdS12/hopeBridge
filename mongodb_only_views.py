@@ -1203,6 +1203,7 @@ def mongo_activity_list_view(request):
     return render(request, 'activities/activity_list.html', context)
 
 
+@mongo_auth_required
 def mongo_activity_create_view(request):
     """MongoDB-based activity creation view"""
     user = _get_session_user(request)  # Use the fallback user system
