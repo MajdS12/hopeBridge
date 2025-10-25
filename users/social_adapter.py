@@ -93,9 +93,27 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         # --------- סנכרון ל-Mongo ---------
         try:
-            # Check if MongoDB is available before trying to use it
+            # Try to ensure MongoDB connection first
             if not ensure_mongodb_connection():
                 logger.warning("MongoDB not available, using fallback user system")
+                # Set session data from Django user as fallback
+                request.session['mongo_user_id'] = str(user.id)
+                request.session['mongo_user_email'] = user.email
+                request.session['mongo_user_name'] = getattr(user, "name", "") or user.email.split("@")[0]
+                request.session['mongo_user_is_staff'] = False
+                request.session['mongo_user_is_superuser'] = False
+                logger.info(f"Set fallback session data for user: {user.email}")
+                return user
+            
+            # Try to perform a simple MongoDB operation to test if we can actually use it
+            # This will catch authentication errors that happen during operations
+            try:
+                logger.info(f"Testing MongoDB operations for email: {user.email}")
+                # Try a simple query to test if we can actually use MongoDB
+                MongoUser.objects.limit(1).first()
+                logger.info(f"MongoDB operations test successful, proceeding with user creation")
+            except Exception as test_error:
+                logger.warning(f"MongoDB operations test failed: {test_error}, using fallback system")
                 # Set session data from Django user as fallback
                 request.session['mongo_user_id'] = str(user.id)
                 request.session['mongo_user_email'] = user.email
