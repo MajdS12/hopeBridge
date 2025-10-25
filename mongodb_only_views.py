@@ -904,8 +904,33 @@ def mongo_dashboard_view(request):
 
 def mongo_item_list_view(request):
     """MongoDB-based item list view - shows donations with items"""
-    ensure_mongodb_connection()
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_item_list_view, using fallback")
+        # Use fallback user system
+        user = _get_session_user(request)
+        if not user:
+            return redirect('login')
+        
+        # Get user roles from session
+        user_roles = request.session.get('user_roles', {})
+        is_recipient = user_roles.get('is_recipient', False)
+        is_donor = user_roles.get('is_donor', False)
+        
+        # Create empty context for fallback
+        context = {
+            'items': [],
+            'donations': [],
+            'categories': [],
+            'conditions': [],
+            'current_category': '',
+            'current_condition': '',
+            'search_query': '',
+            'user': user,
+        }
+        return render(request, 'donations/donation_list.html', context)
 
+    # MongoDB is available, proceed with normal logic
     # Get filter parameters
     category = request.GET.get('category', '')
     condition = request.GET.get('condition', '')
@@ -1009,14 +1034,25 @@ def mongo_item_list_view(request):
 
     return render(request, 'donations/donation_list.html', context)
 
-@mongo_auth_required
 def mongo_item_create_view(request):
     """MongoDB-based item creation view"""
-    if request.method == 'POST':
-        ensure_mongodb_connection()
+    user = _get_session_user(request)
+    if not user:
+        messages.error(request, 'Please log in first.')
+        return redirect('login')
 
-        # User is already authenticated and active due to decorator
-        user = request.mongo_user
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_item_create_view, showing form only")
+        # Show the form but disable functionality
+        context = {
+            'user': user,
+            'mongodb_available': False,
+        }
+        return render(request, 'donations/create_donation.html', context)
+
+    if request.method == 'POST':
+        # User is already authenticated
         # Get donor profile
         donor = MongoDonor.objects(user_id=user.id).first()
         if not donor:
@@ -1050,13 +1086,39 @@ def mongo_item_create_view(request):
         messages.success(request, 'Item created successfully!')
         return redirect('item_list')
 
-    return render(request, 'donations/create_donation.html')
+    context = {
+        'user': user,
+        'mongodb_available': True,
+    }
+    return render(request, 'donations/create_donation.html', context)
 
 
 def mongo_activity_list_view(request):
     """MongoDB-based activity list view"""
-    ensure_mongodb_connection()
+    # Check if MongoDB is available
+    if not ensure_mongodb_connection():
+        logger.warning("MongoDB not available in mongo_activity_list_view, using fallback")
+        # Use fallback user system
+        user = _get_session_user(request)
+        if not user:
+            return redirect('login')
+        
+        # Get user roles from session
+        user_roles = request.session.get('user_roles', {})
+        is_volunteer = user_roles.get('is_volunteer', False)
+        
+        # Create empty context for fallback
+        context = {
+            'activities': [],
+            'categories': [],
+            'current_category': '',
+            'search_query': '',
+            'user': user,
+            'volunteer_profile': is_volunteer,
+        }
+        return render(request, 'activities/activity_list.html', context)
 
+    # MongoDB is available, proceed with normal logic
     # Get filter parameters
     category = request.GET.get('category', '')
     search = request.GET.get('search', '')
