@@ -14,6 +14,47 @@ def health_check(request):
     # Railway expects a simple 200 OK response with plain text
     return HttpResponse("OK", status=200)
 
+# MongoDB connection test endpoint
+def mongodb_test(request):
+    from django.http import JsonResponse
+    from mongo_utils import get_mongodb_connection, ensure_mongodb_connection
+    from django.conf import settings
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Try to ensure MongoDB connection
+        connected = ensure_mongodb_connection()
+        
+        # Get connection status
+        connection_status = get_mongodb_connection()
+        
+        # Get MongoDB settings
+        mongodb_info = {
+            'connected': connected,
+            'connection_status': connection_status,
+            'uri_set': bool(getattr(settings, 'MONGODB_URI', None)),
+            'host': getattr(settings, 'MONGODB_HOST', 'Not set'),
+            'port': getattr(settings, 'MONGODB_PORT', 'Not set'),
+            'database': getattr(settings, 'MONGODB_DATABASE', 'Not set'),
+            'uri_contains_railway_internal': 'railway.internal' in getattr(settings, 'MONGODB_URI', ''),
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'mongodb': mongodb_info,
+            'message': 'MongoDB connection test completed'
+        })
+        
+    except Exception as e:
+        logger.error(f"MongoDB test error: {e}")
+        return JsonResponse({
+            'status': 'error',
+            'error': str(e),
+            'message': 'MongoDB connection test failed'
+        }, status=500)
+
 # Welcome view for root path
 def welcome_view(request):
     from django.shortcuts import render
@@ -61,6 +102,7 @@ from mongodb_admin import (
 urlpatterns = [
     path('admin/', lambda request: redirect('admin_dashboard')),
     path('health/', health_check, name='health_check'),
+    path('mongodb-test/', mongodb_test, name='mongodb_test'),
 ]
 
 # ---- עמודים כלליים ----
