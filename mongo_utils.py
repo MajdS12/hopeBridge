@@ -27,8 +27,11 @@ def connect_to_mongodb():
                 logger.warning("Railway internal MongoDB URI detected, this might not be accessible")
                 # Try to construct a working URI using environment variables
                 if hasattr(settings, 'MONGODB_HOST') and settings.MONGODB_HOST != 'localhost':
-                    # Use the external hostname instead
+                    # Use the external hostname and port instead
                     external_uri = settings.MONGODB_URI.replace('mongodb.railway.internal', settings.MONGODB_HOST)
+                    # Also replace the port if it's different
+                    if hasattr(settings, 'MONGODB_PORT') and settings.MONGODB_PORT != 27017:
+                        external_uri = external_uri.replace(':27017', f':{settings.MONGODB_PORT}')
                     logger.info(f"Trying external MongoDB URI: {external_uri.replace('@', ':***@') if '@' in external_uri else external_uri}")
                     connect(host=external_uri, alias='default')
                 else:
