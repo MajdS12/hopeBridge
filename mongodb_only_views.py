@@ -123,11 +123,18 @@ def _get_fallback_user(request):
     import uuid
     dj_user = getattr(request, "user", None)
     if dj_user and getattr(dj_user, "is_authenticated", False):
+        # Check if we already have a consistent user ID in session
+        user_id = request.session.get("mongo_user_id")
+        if not user_id:
+            # Generate a new UUID only if we don't have one
+            user_id = str(uuid.uuid4())
+            request.session["mongo_user_id"] = user_id
+        
         # Create a mock user object that works without MongoDB
         class MockMongoUser:
-            def __init__(self, dj_user):
-                # Use a proper ObjectId-like string for MongoDB compatibility
-                self.id = str(uuid.uuid4())  # Generate a proper UUID instead of Django ID
+            def __init__(self, dj_user, user_id):
+                # Use the consistent user ID from session
+                self.id = user_id
                 self.email = dj_user.email
                 self.name = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
                 self.phone = getattr(dj_user, "phone", "")
@@ -136,14 +143,14 @@ def _get_fallback_user(request):
                 self.is_superuser = getattr(dj_user, "is_superuser", False)
                 self.address = None
         
-        # Store in session for consistency
-        request.session["mongo_user_id"] = str(uuid.uuid4())
-        request.session["mongo_user_email"] = dj_user.email
-        request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
-        request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
-        request.session["mongo_user_is_superuser"] = getattr(dj_user, "is_superuser", False)
+        # Store in session for consistency (only if not already stored)
+        if "mongo_user_email" not in request.session:
+            request.session["mongo_user_email"] = dj_user.email
+            request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
+            request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
+            request.session["mongo_user_is_superuser"] = getattr(dj_user, "is_superuser", False)
         
-        return MockMongoUser(dj_user)
+        return MockMongoUser(dj_user, user_id)
     return None
 
 
@@ -1069,6 +1076,9 @@ def mongo_item_create_view(request):
             donations = request.session.get('temp_donations', [])
             donations.append(donation_data)
             request.session['temp_donations'] = donations
+            
+            # Explicitly save the session to ensure it persists
+            request.session.save()
             
             messages.success(request, 'Donation item created successfully! (Stored temporarily - will be saved to database when MongoDB is available)')
             return redirect('item_list')
