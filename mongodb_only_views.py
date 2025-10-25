@@ -120,12 +120,14 @@ def _get_session_user(request):
 
 def _get_fallback_user(request):
     """Fallback user system when MongoDB is not available"""
+    import uuid
     dj_user = getattr(request, "user", None)
     if dj_user and getattr(dj_user, "is_authenticated", False):
         # Create a mock user object that works without MongoDB
         class MockMongoUser:
             def __init__(self, dj_user):
-                self.id = str(dj_user.id)
+                # Use a proper ObjectId-like string for MongoDB compatibility
+                self.id = str(uuid.uuid4())  # Generate a proper UUID instead of Django ID
                 self.email = dj_user.email
                 self.name = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
                 self.phone = getattr(dj_user, "phone", "")
@@ -135,7 +137,7 @@ def _get_fallback_user(request):
                 self.address = None
         
         # Store in session for consistency
-        request.session["mongo_user_id"] = str(dj_user.id)
+        request.session["mongo_user_id"] = str(uuid.uuid4())
         request.session["mongo_user_email"] = dj_user.email
         request.session["mongo_user_name"] = getattr(dj_user, "name", "") or dj_user.email.split("@")[0]
         request.session["mongo_user_is_staff"] = getattr(dj_user, "is_staff", False)
@@ -184,12 +186,22 @@ def onboarding(request):
             return redirect("dashboard_selection")
 
         # MongoDB is available, create profiles normally
-        if want_donor and not MongoDonor.objects(user_id=user.id).first():     
-            MongoDonor(user_id=user.id).save()
-        if want_recipient and not MongoRecipient.objects(user_id=user.id).first(): 
-            MongoRecipient(user_id=user.id).save()
-        if want_volunteer and not MongoVolunteer.objects(user_id=user.id).first(): 
-            MongoVolunteer(user_id=user.id).save()
+        try:
+            if want_donor and not MongoDonor.objects(user_id=user.id).first():     
+                MongoDonor(user_id=user.id).save()
+            if want_recipient and not MongoRecipient.objects(user_id=user.id).first(): 
+                MongoRecipient(user_id=user.id).save()
+            if want_volunteer and not MongoVolunteer.objects(user_id=user.id).first(): 
+                MongoVolunteer(user_id=user.id).save()
+        except Exception as e:
+            logger.error(f"Error creating MongoDB profiles: {e}")
+            # Fall back to session storage
+            request.session['user_roles'] = {
+                'is_donor': want_donor,
+                'is_recipient': want_recipient,
+                'is_volunteer': want_volunteer
+            }
+            request.session['onboarding_completed'] = True
 
         if selected_count == 1:
             if want_donor:     return redirect("donor_dashboard")
